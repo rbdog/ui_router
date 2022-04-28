@@ -1,6 +1,6 @@
 ![Header](https://github.com/rbdog/ui_router/blob/main/resources/images/ui-router-header.png?raw=true)
 
-# Super Simple Router
+# Super Simple UI Router
 
 https://pub.dev/packages/ui_router
 
