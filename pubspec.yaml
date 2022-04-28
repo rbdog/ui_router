@@ -1,7 +1,8 @@
 name: ui_router
 description: >
   Super Simple, Minimal, Lightweight Router.
-version: 1.0.0
+  Easy to use and organize the pages on your application.
+version: 1.0.2
 homepage: https://github.com/rbdog/ui_router
 repository: https://github.com/rbdog/ui_router
 

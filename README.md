@@ -1,4 +1,6 @@
-# Super Simple, Minimal, Lightweight Router.
+![Header](https://github.com/rbdog/ui_router/blob/main/resources/images/ui-router-header.png?raw=true)
+
+# Super Simple Router
 
 ## router
 
@@ -24,7 +26,7 @@ final router = UiRouter(
 router.widget()
 ```
 
-## push (go to Page B)
+## push
 
 ```
 router.push('B');
@@ -41,3 +43,5 @@ router.push('B', params: {'message': 'HELLO😁'});
 ```
 router.pop();
 ```
+
+✨ Using Navigator 2.0 ✨
