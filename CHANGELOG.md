@@ -15,3 +15,7 @@
 - Add: popTo()
 - Add: willPush()
 - Add: willPop()
+
+## 1.0.4
+
+- Fix documents

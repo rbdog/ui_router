@@ -10,11 +10,11 @@ https://pub.dev/packages/ui_router
 final router = UiRouter(
   pages: [
     UiPage(
-      id: Pages.A,
+      id: 'A',
       build: (params) => PageA(),
     ),
     UiPage(
-      id: Pages.B,
+      id: 'B',
       build: (params) => PageB(params['message']),
     ),
     // ...this is all pages in my app
