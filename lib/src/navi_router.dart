@@ -88,15 +88,19 @@ class UiRouter<PageId> extends ChangeNotifier {
   final List<UiPage<PageId>> pages;
   _State<PageId> _state;
   Widget? cacheWidget;
+  // ignore: prefer_function_declarations_over_variables
+  var _allowPush = (PageId left, PageId right) => true;
+  // ignore: prefer_function_declarations_over_variables
+  var _allowPop = (PageId left, PageId right) => true;
 
   /// Constructor
   UiRouter({
-    required PageId initialPageId,
     required this.pages,
+    PageId? initialPageId,
   }) : _state = _State(
           stack: [
             _Element(
-              pageId: initialPageId,
+              pageId: initialPageId ?? pages.first.id,
               params: {},
             ),
           ],
@@ -113,15 +117,49 @@ class UiRouter<PageId> extends ChangeNotifier {
     PageId pageId, {
     Map<String, String> params = const {},
   }) {
+    final allowPush = _allowPush(_state.stack.last.pageId, pageId);
+    if (!allowPush) return;
     final idParams = _Element(pageId: pageId, params: params);
     _state = _State(stack: [..._state.stack, idParams]);
     notifyListeners();
   }
 
-  /// Back to the page
+  /// Back one page
   pop() {
+    if (_state.stack.length <= 1) return;
+    final right = _state.stack.last.pageId;
+    final left = _state.stack[_state.stack.length - 2].pageId;
+    final allowPop = _allowPop(left, right);
+    if (!allowPop) return;
     _state = _State(stack: _state.stack..removeLast());
     notifyListeners();
+  }
+
+  /// Back some pages
+  popTo(PageId id) {
+    final index = _state.stack.indexWhere((e) => e.pageId == id);
+    if (index < 0) return;
+    final right = _state.stack.last.pageId;
+    final left = _state.stack[index].pageId;
+    final allowPop = _allowPop(left, right);
+    if (!allowPop) return;
+    final newStack = _state.stack.sublist(0, index);
+    _state = _State(stack: newStack);
+    notifyListeners();
+  }
+
+  /// Called when push
+  /// You can cancel if needed
+  /// Push from the left to the right
+  willPush(bool Function(PageId left, PageId right) allowPush) {
+    _allowPush = allowPush;
+  }
+
+  /// Called when pop
+  /// You can cancel if needed
+  /// Pop from the right to the left
+  willPop(bool Function(PageId left, PageId right) allowPop) {
+    _allowPop = allowPop;
   }
 
   /// See the Page history
