@@ -58,7 +58,7 @@ class _RouterWidget<PageId> extends StatelessWidget {
       builder: (context, r, child) {
         final navigator = Navigator(
           pages: [
-            for (var ele in r.stack())
+            for (var ele in r._state.stack)
               MaterialPage(
                 child: buildPage(r, ele),
               ),
@@ -163,7 +163,7 @@ class UiRouter<PageId> extends ChangeNotifier {
   }
 
   /// See the Page history
-  List<_Element<PageId>> stack() {
-    return _state.stack;
+  List<PageId> stack() {
+    return _state.stack.map((e) => e.pageId).toList();
   }
 }

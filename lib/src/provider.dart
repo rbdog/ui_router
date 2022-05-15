@@ -47,12 +47,13 @@ class ChangeNotifierProvider<T extends ChangeNotifier> extends StatefulWidget {
   }
 
   @override
-  _ChangeNotifierProviderState createState() =>
-      _ChangeNotifierProviderState<T>();
+  ChangeNotifierProviderState createState() => ChangeNotifierProviderState<T>();
 }
 
-class _ChangeNotifierProviderState<T extends ChangeNotifier>
+/// the state
+class ChangeNotifierProviderState<T extends ChangeNotifier>
     extends State<ChangeNotifierProvider<T>> {
+  /// type of value
   late T value;
 
   void listener() => setState(() {});
