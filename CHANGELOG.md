@@ -25,3 +25,7 @@
 - Fix: stack()
 - (breaking) require Flutter 3.0.0
 - (breaking) require Dart 2.17.0
+
+## 1.1.1
+
+- Add: enableMaterialYou

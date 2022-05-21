@@ -40,8 +40,11 @@ class TabRouter<PageId> extends ChangeNotifier {
   }) : _state = _State(tabPageId: initialTabPageId);
 
   /// Tab Router Widget
-  Widget widget() {
-    cacheWidget ??= _RouterWidget<PageId>(this);
+  Widget widget({bool enableMaterialYou = false}) {
+    cacheWidget ??= _RouterWidget<PageId>(
+      this,
+      enableMaterialYou: enableMaterialYou,
+    );
     return cacheWidget!;
   }
 
@@ -59,8 +62,12 @@ class TabRouter<PageId> extends ChangeNotifier {
 
 class _RouterWidget<PageId> extends StatelessWidget {
   final TabRouter<PageId> _router;
-  // ignore: use_key_in_widget_constructors
-  const _RouterWidget(this._router);
+  final bool enableMaterialYou;
+
+  const _RouterWidget(
+    this._router, {
+    this.enableMaterialYou = false,
+  });
 
   Widget buildPage(TabRouter<PageId> r, PageId tabPageId) {
     final page = r.tabPages.cast<TabPage<PageId>?>().firstWhere(
@@ -95,10 +102,23 @@ class _RouterWidget<PageId> extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
         );
 
+        /// マテリアルYou
+        var naviBarYou = NavigationBar(
+          destinations: [
+            for (var page in r.tabPages)
+              NavigationDestination(
+                icon: page.tabIcon,
+                label: page.tabLabel,
+              ),
+          ],
+          selectedIndex: r.tabPages.indexWhere((p) => p.id == r.tabPageId()),
+          onDestinationSelected: (i) => _onItemTapped(r, i),
+        );
+
         /// 画面
         return Scaffold(
           body: buildPage(r, r.tabPageId()),
-          bottomNavigationBar: naviBar,
+          bottomNavigationBar: enableMaterialYou ? naviBarYou : naviBar,
         );
       },
     );
