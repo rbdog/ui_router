@@ -76,5 +76,16 @@ router.willPop((left, right) {
 print(router.stack());
 ```
 
+## show loading with a task
+
+```
+router.loading(
+  label: 'Now Loading...',
+  task: () async {
+    await Future.delayed(Duration(seconds: 5));
+  },
+);
+```
+
 😄 Using Navigator 2.0\
 🎉 Contributions are welcomed!

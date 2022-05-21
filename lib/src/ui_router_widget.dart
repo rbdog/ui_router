@@ -3,6 +3,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:ui_router/src/loading_view.dart';
 import 'package:ui_router/src/provider.dart';
 import 'package:ui_router/src/ui_element.dart';
 import 'package:ui_router/src/ui_notifier.dart';
@@ -51,7 +52,15 @@ class UiRouterWidget<PageId> extends StatelessWidget {
           },
         );
 
-        final scaffold = Scaffold(body: navigator);
+        final loading = LoadingView(notifier.state.tasks);
+        final stack = Stack(
+          children: [
+            navigator, // back
+            loading, // front
+          ],
+        );
+
+        final scaffold = Scaffold(body: stack);
         return scaffold;
       },
     );

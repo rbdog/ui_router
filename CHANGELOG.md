@@ -29,3 +29,7 @@
 ## 1.1.1
 
 - Add: enableMaterialYou
+
+## 1.1.2
+
+- Add: loading()

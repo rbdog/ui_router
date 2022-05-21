@@ -3,6 +3,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:ui_router/src/loading_task.dart';
 import 'package:ui_router/src/provider.dart';
 import 'package:ui_router/src/ui_element.dart';
 import 'package:ui_router/src/ui_notifier.dart';
@@ -32,6 +33,7 @@ class UiRouter<PageId> {
                 params: {},
               ),
             ],
+            tasks: [],
           ),
         );
 
@@ -59,7 +61,10 @@ class UiRouter<PageId> {
     final allowPush = _allowPush(_notifier.state.elements.last.pageId, pageId);
     if (!allowPush) return;
     final idParams = UiElement(pageId: pageId, params: params);
-    final newState = UiState(elements: [..._notifier.state.elements, idParams]);
+    final newState = UiState(
+      elements: [..._notifier.state.elements, idParams],
+      tasks: _notifier.state.tasks,
+    );
     _notifier.update(newState);
   }
 
@@ -71,7 +76,10 @@ class UiRouter<PageId> {
         _notifier.state.elements[_notifier.state.elements.length - 2].pageId;
     final allowPop = _allowPop(left, right);
     if (!allowPop) return;
-    final newState = UiState(elements: _notifier.state.elements..removeLast());
+    final newState = UiState(
+      elements: _notifier.state.elements..removeLast(),
+      tasks: _notifier.state.tasks,
+    );
     _notifier.update(newState);
   }
 
@@ -84,7 +92,10 @@ class UiRouter<PageId> {
     final allowPop = _allowPop(left, right);
     if (!allowPop) return;
     final newStack = _notifier.state.elements.sublist(0, index);
-    final newState = UiState(elements: newStack);
+    final newState = UiState(
+      elements: newStack,
+      tasks: _notifier.state.tasks,
+    );
     _notifier.update(newState);
   }
 
@@ -105,5 +116,25 @@ class UiRouter<PageId> {
   /// See the Page history
   List<PageId> stack() {
     return _notifier.state.elements.map((e) => e.pageId).toList();
+  }
+
+  /// Show loading with a task
+  loading({
+    required String label,
+    required Function() task,
+  }) async {
+    final loadingTask = LoadingTask(label: label, action: task);
+    final preState = UiState(
+      elements: _notifier.state.elements,
+      tasks: [..._notifier.state.tasks, loadingTask],
+    );
+    _notifier.update(preState);
+    // await task action
+    await loadingTask.action();
+    final postState = UiState(
+      elements: _notifier.state.elements,
+      tasks: _notifier.state.tasks..remove(loadingTask),
+    );
+    _notifier.update(postState);
   }
 }
