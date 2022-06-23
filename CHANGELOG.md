@@ -33,3 +33,7 @@
 ## 1.1.2
 
 - Add: loading()
+
+## 1.1.3
+
+- Fix: popTo()

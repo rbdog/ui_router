@@ -91,7 +91,7 @@ class UiRouter<PageId> {
     final left = _notifier.state.elements[index].pageId;
     final allowPop = _allowPop(left, right);
     if (!allowPop) return;
-    final newStack = _notifier.state.elements.sublist(0, index);
+    final newStack = _notifier.state.elements.sublist(0, index + 1);
     final newState = UiState(
       elements: newStack,
       tasks: _notifier.state.tasks,
