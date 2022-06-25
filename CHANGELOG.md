@@ -37,3 +37,7 @@
 ## 1.1.3
 
 - Fix: popTo()
+
+## 1.1.4
+
+- Fix: clashes after dispose widget
