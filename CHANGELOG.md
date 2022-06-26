@@ -41,3 +41,7 @@
 ## 1.1.4
 
 - Fix: clashes after dispose widget
+
+## 1.1.5
+
+- Add: setLogger()

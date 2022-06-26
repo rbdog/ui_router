@@ -2,6 +2,8 @@
 //
 //
 
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:ui_router/src/loading_task.dart';
 import 'package:ui_router/src/provider.dart';
@@ -21,6 +23,8 @@ class UiRouter<PageId> {
   var _allowPush = (PageId left, PageId right) => true;
   // ignore: prefer_function_declarations_over_variables
   var _allowPop = (PageId left, PageId right) => true;
+  // ignore: prefer_function_declarations_over_variables
+  void Function(String log) _logger = (String log) {};
 
   /// Constructor
   UiRouter({
@@ -32,6 +36,7 @@ class UiRouter<PageId> {
   Widget widget() {
     // Create if not exist
     if (_cacheWidget == null) {
+      _logger('init Widget');
       // notifier を初期化
       _notifier = UiNotifier<PageId>(
         UiState<PageId>(
@@ -61,6 +66,7 @@ class UiRouter<PageId> {
 
   /// willDisappesrWidget
   _willDisappesrWidget() {
+    _logger('Clear Widget cache');
     _cacheWidget = null;
   }
 
@@ -125,6 +131,11 @@ class UiRouter<PageId> {
   /// Pop from the right to the left
   willPop(bool Function(PageId left, PageId right) allowPop) {
     _allowPop = allowPop;
+  }
+
+  /// watch log
+  setLogger(void Function(String log) logger) {
+    _logger = logger;
   }
 
   /// See the Page history
