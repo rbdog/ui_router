@@ -45,3 +45,7 @@
 ## 1.1.5
 
 - Add: setLogger()
+
+## 1.1.6
+
+- Fix: bug => dart:ffi
