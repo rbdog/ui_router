@@ -5,6 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:ui_router/src/loading_task.dart';
 import 'package:ui_router/src/provider.dart';
+import 'package:ui_router/src/ui_dialog_completer.dart';
+import 'package:ui_router/src/ui_dialog.dart';
+import 'package:ui_router/src/ui_dialog_answer.dart';
 import 'package:ui_router/src/ui_element.dart';
 import 'package:ui_router/src/ui_notifier.dart';
 import 'package:ui_router/src/ui_page.dart';
@@ -12,9 +15,10 @@ import 'package:ui_router/src/ui_router_widget.dart';
 import 'package:ui_router/src/ui_state.dart';
 
 /// Router for App UI
-class UiRouter<PageId> {
+class UiRouter<PageId, DialogId> {
   final List<UiPage<PageId>> pages;
-  UiNotifier<PageId>? _notifier;
+  final List<UiDialog<DialogId>> dialogs;
+  UiNotifier<PageId, DialogId>? _notifier;
   Widget? _cacheWidget;
   PageId? initialPageId;
   // ignore: prefer_function_declarations_over_variables
@@ -27,7 +31,8 @@ class UiRouter<PageId> {
   /// Constructor
   UiRouter({
     required this.pages,
-    required this.initialPageId,
+    this.dialogs = const [],
+    this.initialPageId,
   });
 
   // Widget to show
@@ -36,25 +41,28 @@ class UiRouter<PageId> {
     if (_cacheWidget == null) {
       _logger('init Widget');
       // notifier を初期化
-      _notifier = UiNotifier<PageId>(
-        UiState<PageId>(
+      _notifier = UiNotifier<PageId, DialogId>(
+        UiState<PageId, DialogId>(
           elements: [
             UiElement(
               pageId: initialPageId ?? pages.first.id,
               params: {},
+              completer: null,
             ),
           ],
+          dialogElements: [],
           tasks: [],
         ),
-        _willDisappesrWidget,
+        _willDisappearWidget,
       );
       _cacheWidget = ChangeNotifierProvider(
         create: (context) {
           return _notifier!;
         },
-        child: UiRouterWidget<PageId>(
+        child: UiRouterWidget<PageId, DialogId>(
           notifier: _notifier!, // 表示前に呼ぶとクラッシュ
           pages: pages,
+          dialogs: dialogs,
           onPressPop: pop,
         ),
       );
@@ -63,7 +71,7 @@ class UiRouter<PageId> {
   }
 
   /// willDisappesrWidget
-  _willDisappesrWidget() {
+  _willDisappearWidget() {
     _logger('Clear Widget cache');
     _cacheWidget = null;
   }
@@ -76,9 +84,14 @@ class UiRouter<PageId> {
     if (_notifier == null) return;
     final allowPush = _allowPush(_notifier!.state.elements.last.pageId, pageId);
     if (!allowPush) return;
-    final idParams = UiElement(pageId: pageId, params: params);
+    final idParams = UiElement(
+      pageId: pageId,
+      params: params,
+      completer: null,
+    );
     final newState = UiState(
       elements: [..._notifier!.state.elements, idParams],
+      dialogElements: _notifier!.state.dialogElements,
       tasks: _notifier!.state.tasks,
     );
     _notifier!.update(newState);
@@ -95,6 +108,7 @@ class UiRouter<PageId> {
     if (!allowPop) return;
     final newState = UiState(
       elements: _notifier!.state.elements..removeLast(),
+      dialogElements: _notifier!.state.dialogElements,
       tasks: _notifier!.state.tasks,
     );
     _notifier!.update(newState);
@@ -112,6 +126,7 @@ class UiRouter<PageId> {
     final newStack = _notifier!.state.elements.sublist(0, index + 1);
     final newState = UiState(
       elements: newStack,
+      dialogElements: _notifier!.state.dialogElements,
       tasks: _notifier!.state.tasks,
     );
     _notifier!.update(newState);
@@ -151,6 +166,7 @@ class UiRouter<PageId> {
     final loadingTask = LoadingTask(label: label, action: task);
     final preState = UiState(
       elements: _notifier!.state.elements,
+      dialogElements: _notifier!.state.dialogElements,
       tasks: [..._notifier!.state.tasks, loadingTask],
     );
     _notifier!.update(preState);
@@ -158,8 +174,38 @@ class UiRouter<PageId> {
     await loadingTask.action();
     final postState = UiState(
       elements: _notifier!.state.elements,
+      dialogElements: _notifier!.state.dialogElements,
       tasks: _notifier!.state.tasks..remove(loadingTask),
     );
     _notifier!.update(postState);
+  }
+
+  /// show Dialog
+  Future<UiDialogAnswer> enqDialog(
+    DialogId dialogId, {
+    Map<String, String> params = const {},
+  }) async {
+    if (_notifier == null) throw Exception('_notifier is null');
+    final completer = UiDialogCompleter();
+    final idParams =
+        UiElement(pageId: dialogId, params: params, completer: completer);
+    final newState = UiState(
+      elements: _notifier!.state.elements,
+      dialogElements: [..._notifier!.state.dialogElements, idParams],
+      tasks: _notifier!.state.tasks,
+    );
+    _notifier!.update(newState);
+    return await completer.getAnswer();
+  }
+
+  // hide dialog
+  deqDialog() {
+    if (_notifier == null) return;
+    final newState = UiState(
+      elements: _notifier!.state.elements,
+      dialogElements: _notifier!.state.dialogElements..removeLast(),
+      tasks: _notifier!.state.tasks,
+    );
+    _notifier!.update(newState);
   }
 }

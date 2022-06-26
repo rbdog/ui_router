@@ -53,3 +53,8 @@
 ## 1.1.7
 
 - Fix: TabRouter
+
+## 1.2.0
+
+- add: enqDialog()
+- add: deqDialog()

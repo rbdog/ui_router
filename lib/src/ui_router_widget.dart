@@ -3,6 +3,7 @@
 //
 
 import 'package:flutter/material.dart';
+import 'package:ui_router/src/dialog_view.dart';
 import 'package:ui_router/src/loading_view.dart';
 import 'package:ui_router/src/provider.dart';
 import 'package:ui_router/src/ui_element.dart';
@@ -10,14 +11,16 @@ import 'package:ui_router/src/ui_notifier.dart';
 import 'package:ui_router/ui_router.dart';
 
 /// UiRouterWidget
-class UiRouterWidget<PageId> extends StatelessWidget {
-  final UiNotifier<PageId> notifier;
+class UiRouterWidget<PageId, DialogId> extends StatelessWidget {
+  final UiNotifier<PageId, DialogId> notifier;
   final List<UiPage> pages;
+  final List<UiDialog> dialogs;
   final void Function() onPressPop;
   const UiRouterWidget({
     required this.notifier,
     required this.pages,
     required this.onPressPop,
+    this.dialogs = const [],
     Key? key,
   }) : super(key: key);
 
@@ -37,7 +40,7 @@ class UiRouterWidget<PageId> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final consumer = Consumer<UiNotifier<PageId>>(
+    final consumer = Consumer<UiNotifier<PageId, DialogId>>(
       builder: (context, notifier, _) {
         final navigator = Navigator(
           pages: [
@@ -55,8 +58,12 @@ class UiRouterWidget<PageId> extends StatelessWidget {
         final loading = LoadingView(notifier.state.tasks);
         final stack = Stack(
           children: [
-            navigator, // back
-            loading, // front
+            navigator,
+            DialogView(
+              dialogs: dialogs,
+              dialogElements: notifier.state.dialogElements,
+            ),
+            loading,
           ],
         );
 
