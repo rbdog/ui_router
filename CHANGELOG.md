@@ -49,3 +49,7 @@
 ## 1.1.6
 
 - Fix: bug => dart:ffi
+
+## 1.1.7
+
+- Fix: TabRouter

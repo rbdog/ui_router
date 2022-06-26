@@ -5,10 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:ui_router/src/provider.dart';
 
-class _State<PageId> {
+class TabState<PageId> {
   final PageId tabPageId;
 
-  const _State({
+  const TabState({
     required this.tabPageId,
   });
 }
@@ -27,36 +27,79 @@ class TabPage<PageId> {
   });
 }
 
-/// Router for Tab Pages
-class TabRouter<PageId> extends ChangeNotifier {
-  _State<PageId> _state;
-  final List<TabPage<PageId>> tabPages;
-  Widget? cacheWidget;
+/// Notifier for Tab Pages
+class TabNotifier<PageId> extends ChangeNotifier {
+  TabState<PageId> _state;
+  void Function() willDispose;
+  TabNotifier(this._state, this.willDispose);
 
-  /// Constructor
-  TabRouter({
-    required PageId initialTabPageId,
-    required this.tabPages,
-  }) : _state = _State(tabPageId: initialTabPageId);
-
-  /// Tab Router Widget
-  Widget widget({bool enableMaterialYou = false}) {
-    cacheWidget ??= _RouterWidget<PageId>(
-      this,
-      enableMaterialYou: enableMaterialYou,
-    );
-    return cacheWidget!;
+  /// update the state
+  update(TabState<PageId> newState) {
+    _state = newState;
+    notifyListeners();
   }
 
-  /// Tab Page ID
-  PageId tabPageId() {
-    return _state.tabPageId;
+  @override
+  void dispose() {
+    willDispose();
+    super.dispose();
   }
 
   /// Switch Tab
   select(PageId tabPageId) {
-    _state = _State(tabPageId: tabPageId);
+    _state = TabState(tabPageId: tabPageId);
     notifyListeners();
+  }
+}
+
+/// Router for Tab Pages
+class TabRouter<PageId> {
+  PageId initialTabPageId;
+  final List<TabPage<PageId>> tabPages;
+  TabNotifier<PageId>? _notifier;
+  Widget? _cacheWidget;
+  void Function(String log) _logger = (String log) {};
+
+  /// Constructor
+  TabRouter({
+    required this.initialTabPageId,
+    required this.tabPages,
+  });
+
+  // Widget to show
+  Widget widget({bool enableMaterialYou = false}) {
+    // Create if not exist
+    if (_cacheWidget == null) {
+      _logger('init Widget');
+      // notifier を初期化
+      _notifier = TabNotifier<PageId>(
+        TabState(tabPageId: initialTabPageId),
+        _willDispose,
+      );
+      _cacheWidget = _RouterWidget<PageId>(
+        this,
+        enableMaterialYou: enableMaterialYou,
+      );
+    }
+    return _cacheWidget!;
+  }
+
+  /// Tab Page ID
+  PageId tabPageId() {
+    if (_notifier == null) {
+      throw Exception('cannot read tab nefore widget appear');
+    }
+    return _notifier!._state.tabPageId;
+  }
+
+  /// Switch Tab
+  select(PageId tabPageId) {
+    if (_notifier == null) return;
+    _notifier!.select(tabPageId);
+  }
+
+  _willDispose() {
+    _cacheWidget = null;
   }
 }
 
@@ -89,35 +132,37 @@ class _RouterWidget<PageId> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final consumer = Consumer<TabRouter<PageId>>(
+    final consumer = Consumer<TabNotifier<PageId>>(
       builder: (context, r, child) {
         /// 画面下のバー
         var naviBar = BottomNavigationBar(
           items: [
-            for (var page in r.tabPages)
+            for (var page in _router.tabPages)
               BottomNavigationBarItem(icon: page.tabIcon, label: page.tabLabel),
           ],
-          currentIndex: r.tabPages.indexWhere((p) => p.id == r.tabPageId()),
-          onTap: (i) => _onItemTapped(r, i),
+          currentIndex:
+              _router.tabPages.indexWhere((p) => p.id == _router.tabPageId()),
+          onTap: (i) => _onItemTapped(_router, i),
           type: BottomNavigationBarType.fixed,
         );
 
         /// マテリアルYou
         var naviBarYou = NavigationBar(
           destinations: [
-            for (var page in r.tabPages)
+            for (var page in _router.tabPages)
               NavigationDestination(
                 icon: page.tabIcon,
                 label: page.tabLabel,
               ),
           ],
-          selectedIndex: r.tabPages.indexWhere((p) => p.id == r.tabPageId()),
-          onDestinationSelected: (i) => _onItemTapped(r, i),
+          selectedIndex:
+              _router.tabPages.indexWhere((p) => p.id == _router.tabPageId()),
+          onDestinationSelected: (i) => _onItemTapped(_router, i),
         );
 
         /// 画面
         return Scaffold(
-          body: buildPage(r, r.tabPageId()),
+          body: buildPage(_router, _router.tabPageId()),
           bottomNavigationBar: enableMaterialYou ? naviBarYou : naviBar,
         );
       },
@@ -125,7 +170,7 @@ class _RouterWidget<PageId> extends StatelessWidget {
 
     return ChangeNotifierProvider(
       create: (context) {
-        return _router;
+        return _router._notifier!;
       },
       child: consumer,
     );
